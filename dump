@@ -1,0 +1,40 @@
+#!/bin/bash
+
+vpnsrv="192.168.8.12 192.168.8.15 192.168.8.16 192.168.8.17"
+clnip=$1
+validsrv=
+pppintc=
+pppintt=
+actip1=`echo $clnip | awk ' BEGIN {FS = "."}; {print $1"."$2}'`
+actip2=`echo $clnip | awk ' BEGIN {FS = "."}; {print $1"."$2"."$3}'`
+
+if [ "$clnip" == "" ]; then
+	echo Please enter client VPN IP
+	exit 0
+elif [[ "$actip1" == "10.12" ]] || [[ "$actip2" == "193.160.227" ]] || [[ "$actip1" == "10.10" ]]; then
+	ssh 192.168.8.9 -l lerich sudo tcpdump -n host $clnip
+elif [[ "$actip1" == "172.16" ]] || [[ "$actip2" == "193.160.226" ]] || [[ "$actip2" == "193.160.225" ]]; then
+	for srv in $vpnsrv
+	do
+		pppintc=`ssh -p 42888 -l valerich $srv netstat -nr | grep -w "$clnip" | awk '{print $8}'`
+		if [[ ! "$pppintc" == "" ]]; then
+			validsrv=$srv
+			pppintt=$pppintc
+		fi
+	done
+	if [[ ! "$validsrv" == "" ]]; then
+		echo SRV: $validsrv PPP: $pppintt
+		ssh -p 42888 -l valerich $validsrv sudo tcpdump -n -i $pppintt
+	fi
+elif [[ "$actip2" == "193.160.225" ]]; then
+	pppintt=`ssh -p 42888 -l valerich 192.168.8.12 netstat -nr | grep -w "$clnip" | awk '{print $8}'`
+	if [[ ! "$pppintt" == "" ]]; then
+		echo PPP: $pppintt
+		ssh -p 42888 -l valerich 192.168.8.12 sudo tcpdump -n -i $pppintt
+	fi
+else
+	echo "Enter valid IP (ex. 172.16.X.X, 10.10.X.X, 10.12.X.X, 193.160.255.X, 193.160.226.X, 193.160.227.X)"
+	exit 0
+fi
+
+exit 0

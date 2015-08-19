@@ -1,0 +1,53 @@
+#!/bin/bash
+arg=$1
+ip=$2
+#list=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 list')
+#add=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 add $ip')
+#delete=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 delete $ip')
+
+
+
+	case $arg in
+add)
+add=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 add '$ip'') # если $doing содержит 1, то запустить nano
+;;
+delete)
+delete=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 delete '$ip'') # если $doing содержит 2, то запустить vi
+;;
+del)
+delete=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 delete '$ip'') # если $doing содержит 2, то запустить vi
+;;
+list)
+list=$(ssh tornado@192.168.8.9 'sudo ipfw table 3 list | grep '$ip'') # если $doing содержит 3, то запустить emacs
+echo $list
+;;
+4)
+exit 0
+;;
+*) #если введено с клавиатуры то, что в case не описывается, выполнять следующее:
+echo "Необходимо указать параметр add(добавить), delete(удалить) или list (просмотреть)"
+esac
+
+if  [[ $arg = '' ]]
+then
+exit 0
+else
+
+case $ip in
+10.12.*.*)
+/bin/echo "ok"  
+;;
+10.10)
+echo "IP вида 10.10.*.* не должны присутствовать в файерволе!" # если $doing содержит 2, то запустить vi
+;;
+193.*.*.*)
+echo "Внимательно проверьте белый ip-адрес!" # если $doing содержит 3, то запустить emacs
+;;
+4)
+exit 0
+;;
+*) #если введено с клавиатуры то, что в case не описывается, выполнять следующее:
+echo "Необходимо указать IP-адрес!"
+esac
+
+fi
